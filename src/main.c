@@ -15,7 +15,7 @@ main(void)
     }
 
     TypingSession ts;
-    if (!InitTypingSession(&ts, &voc, 25))
+    if (!InitTypingSession(&ts, &voc, 25, 4))
     {
         exit(1);
     }
