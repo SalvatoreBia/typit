@@ -1,0 +1,23 @@
+pkgname=typit
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A terminal-inspired typing test application built with raylib"
+arch=('x86_64')
+url="https://github.com/SalvatoreBia/typit"
+license=('MIT')
+depends=('raylib')
+makedepends=('gcc' 'make')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/SalvatoreBia/typit/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver"
+    make
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver"
+    install -Dm755 build/typer "$pkgdir/usr/bin/typit"
+    install -d "$pkgdir/usr/share/typit/resources"
+    cp -r resources/* "$pkgdir/usr/share/typit/resources/"
+}

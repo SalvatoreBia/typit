@@ -21,6 +21,7 @@ typedef struct TypingSession
     int total_correct_words;
 
     double start_time;
+    double elapsed_cache;
     bool   is_running;
 } TypingSession;
 
@@ -37,7 +38,12 @@ void    StopTest(TypingSession *ts);
 bool    ResetTest(TypingSession *ts);
 
 const char* GetCurrentWord(TypingSession *ts);
+const char* GetWordAt(TypingSession *ts, size_t global_idx);
 size_t      GetRemainingCharsInCurrentWord(TypingSession *ts);
+
+bool    HandleCharInput(TypingSession *ts, char c, char *input_buffer, size_t *input_len, size_t max_len);
+bool    HandleSpaceInput(TypingSession *ts, char *input_buffer, size_t *input_len, bool *word_was_correct);
+bool    HandleBackspace(TypingSession *ts, char *input_buffer, size_t *input_len);
 
 
 #endif /* TYPING_TEST_H */

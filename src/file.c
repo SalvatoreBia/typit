@@ -6,11 +6,17 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <dirent.h>
+
 
 #define CHUNK_SIZE 65536
 
 static const char *test_type_table[TEST_TYPE_COUNT] = {
     [TEST_SIMPLE200] = "simple.txt"
+};
+
+static const char *test_type_name[TEST_TYPE_COUNT] = {
+    [TEST_SIMPLE200] = "default"
 };
 
 static size_t
@@ -167,6 +173,22 @@ FreeTestVocabulary(TestVocabulary *voc, bool free_voc_struct)
     }
 }
 
+bool
+ChangeTestLanguage(TestVocabulary *voc, const char *new_lang, TestType type)
+{
+    if (voc == NULL || new_lang == NULL)
+    {
+        ErrorMsg("Passed null pointers to function call");
+        return false;
+    }
+    
+    if (voc->list) { free(voc->list); voc->list = NULL; }
+    if (voc->_raw_buffer) { free(voc->_raw_buffer); voc->_raw_buffer = NULL; }
+    voc->count = 0;
+    
+    return InitTestVocabulary(voc, new_lang, type);
+}
+
 char**
 GetVocabularyChunk(TestVocabulary *voc, size_t chunk)
 {
@@ -215,4 +237,162 @@ error:
         sublist = NULL;
     }
     return NULL;
+}
+
+bool
+InitLanguageList(LanguageList *list)
+{
+    if (list == NULL)
+    {
+        ErrorMsg("Passed null pointer to function call");
+        return false;
+    }
+
+    DIR *dir = opendir(TESTS_BASE_PATH);
+    if (dir == NULL)
+    {
+        ErrorMsg("Failed to open tests directory: %s", TESTS_BASE_PATH);
+        return false;
+    }
+
+    size_t count = 0;
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) 
+    {
+        if (entry->d_name[0] == '.') continue;
+        
+        char path[4096];
+        snprintf(path, sizeof(path), "%s/%s", TESTS_BASE_PATH, entry->d_name);
+        
+        struct stat s;
+        if (stat(path, &s) == 0 && S_ISDIR(s.st_mode))
+        {
+            count++;
+        }
+    }
+
+    if (count == 0)
+    {
+        ErrorMsg("No language directories found");
+        closedir(dir);
+        return false;
+    }
+
+    list->langs = malloc(count * sizeof(char*));
+    if (list->langs == NULL)
+    {
+        ErrorMsg("Failed to allocate memory for language list");
+        closedir(dir);
+        return false;
+    }
+    list->count = count;
+
+    rewinddir(dir);
+    size_t idx = 0;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_name[0] == '.') continue;
+        
+        char path[4096];
+        snprintf(path, sizeof(path), "%s/%s", TESTS_BASE_PATH, entry->d_name);
+        
+        struct stat s;
+        if (stat(path, &s) == 0 && S_ISDIR(s.st_mode))
+        {
+            list->langs[idx] = StringDup(entry->d_name);
+            if (list->langs[idx] == NULL)
+            {
+                ErrorMsg("Failed to duplicate language name");
+                goto error;
+            }
+            if (strcmp(list->langs[idx], "en") == 0) list->curr_lang = idx;
+            idx++;
+        }
+    }
+
+    closedir(dir);
+    return true;
+
+error:
+    for (size_t i = 0; i < idx; i++)
+    {
+        if (list->langs[i]) free(list->langs[i]);
+    }
+    free(list->langs);
+    list->langs     = NULL;
+    list->count     = 0;
+    list->curr_lang = 0;
+    closedir(dir);
+    return false;
+}
+
+void
+FreeLanguageList(LanguageList *list)
+{
+    if (list == NULL) return;
+    if (list->langs)
+    {
+        for (size_t i = 0; i < list->count; i++)
+        {
+            if (list->langs[i]) free(list->langs[i]);
+        }
+        free(list->langs);
+        list->langs = NULL;
+    }
+    list->count     = 0;
+    list->curr_lang = 0;
+}
+
+bool
+InitTestTypeList(TestTypeList *list)
+{
+    if (list == NULL)
+    {
+        ErrorMsg("Passed null pointer to function call");
+        return false;
+    }
+
+    list->types = malloc(TEST_TYPE_COUNT * sizeof(char*));
+    if (list->types == NULL)
+    {
+        ErrorMsg("Failed to allocate memory for test type list");
+        return false;
+    }
+
+    for (size_t i = 0; i < TEST_TYPE_COUNT; i++)
+    {
+        list->types[i] = StringDup(test_type_name[i]);
+        if (list->types[i] == NULL)
+        {
+            ErrorMsg("Failed to duplicate test type name");
+            for (size_t j = 0; j < i; j++)
+            {
+                free(list->types[j]);
+            }
+            free(list->types);
+            list->types = NULL;
+            return false;
+        }
+    }
+
+    list->count = TEST_TYPE_COUNT;
+    list->curr_type = 0;
+    return true;
+}
+
+void
+FreeTestTypeList(TestTypeList *list)
+{
+    if (list == NULL) return;
+    if (list->types)
+    {
+        for (size_t i = 0; i < list->count; i++)
+        {
+            if (list->types[i]) free(list->types[i]);
+        }
+        free(list->types);
+        list->types = NULL;
+    }
+    list->count = 0;
+    list->curr_type = 0;
 }

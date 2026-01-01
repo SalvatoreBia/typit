@@ -1,0 +1,10 @@
+Package: typit
+Version: 0.1.0
+Section: games
+Priority: optional
+Architecture: amd64
+Depends: libraylib-dev
+Maintainer: SalvatoreBia <salvatore@example.com>
+Description: A terminal-inspired typing test application
+ A typing test built with raylib featuring infinite word scrolling,
+ error tracking, and WPM calculation.
