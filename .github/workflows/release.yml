@@ -6,15 +6,15 @@ on:
       - 'v*'
 
 jobs:
-  build-ubuntu:
-    runs-on: ubuntu-latest
+  build-appimage:
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git build-essential software-properties-common
+          sudo apt-get install -y git build-essential software-properties-common wget fuse libfuse2
           sudo add-apt-repository -y ppa:texus/raylib
           sudo apt-get update
           sudo apt-get install -y libraylib5-dev libgl1-mesa-dev
@@ -22,36 +22,51 @@ jobs:
       - name: Build
         run: make
         
-      - name: Create DEB package
+      - name: Create AppImage
         run: |
           VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          mkdir -p typit_${VERSION}_amd64/DEBIAN
-          mkdir -p typit_${VERSION}_amd64/usr/bin
-          mkdir -p typit_${VERSION}_amd64/usr/share/typit
           
-          cp build/typer typit_${VERSION}_amd64/usr/bin/typit
-          cp -r resources typit_${VERSION}_amd64/usr/share/typit/
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
           
-          cat > typit_${VERSION}_amd64/DEBIAN/control << EOF
-          Package: typit
-          Version: ${VERSION}
-          Section: games
-          Priority: optional
-          Architecture: amd64
-          Maintainer: SalvatoreBia
-          Description: A typing test application built with raylib
+          cp build/typer AppDir/usr/bin/typit
+          cp -r resources AppDir/usr/bin/
+          
+          cat > AppDir/typit.desktop << EOF
+          [Desktop Entry]
+          Type=Application
+          Name=Typit
+          Exec=typit
+          Icon=typit
+          Categories=Game;
           EOF
           
-          dpkg-deb --build typit_${VERSION}_amd64
+          cat > AppDir/usr/share/icons/hicolor/256x256/apps/typit.png << EOF
+          EOF
+          touch AppDir/typit.png
+          
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          cd "$HERE/usr/bin"
+          exec ./typit "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir typit-${VERSION}-x86_64.AppImage
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: typit-deb
-          path: typit_*_amd64.deb
+          name: typit-appimage
+          path: typit-*.AppImage
 
   release:
-    needs: [build-ubuntu]
+    needs: [build-appimage]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -62,5 +77,5 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: typit-deb/*.deb
+          files: typit-appimage/*.AppImage
           generate_release_notes: true
