@@ -151,9 +151,7 @@ InitTestVocabulary(TestVocabulary *voc, const char *lang, TestType type)
     return true;
 
 error:
-    if (voc->list) { free(voc->list); voc->list = NULL; }
-    if (voc->_raw_buffer) { free(voc->_raw_buffer); voc->_raw_buffer = NULL; }
-    voc->count = 0;
+    FreeTestVocabulary(voc, false);
     return false;
 }
 
