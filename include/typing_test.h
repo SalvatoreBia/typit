@@ -18,7 +18,7 @@ typedef struct
 
 
 bool    InitTypingSession(TypingSession *ts, TestVocabulary *voc, size_t test_chunk);
-void    FreeTypingSession(TypingSession *ts);
+void    FreeTypingSession(TypingSession *ts, bool free_ts_struct);
 bool    SwapAndSetNext(TypingSession *ts);
 
 

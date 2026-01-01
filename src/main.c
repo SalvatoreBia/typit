@@ -26,6 +26,17 @@ main(void)
         fprintf(stdout, "%zu. CURR = %s, NEXT = %s\n", i+1, ts.curr[i], ts.next[i]);
     }
 
+    if (!SwapAndSetNext(&ts))
+    {
+        exit(1);
+    }
+
+    for (size_t i = 0; i < 25; ++i)
+    {
+        fprintf(stdout, "%zu. CURR = %s, NEXT = %s\n", i+1, ts.curr[i], ts.next[i]);
+    }
+
+    FreeTypingSession(&ts, false);
     FreeTestVocabulary(&voc, false);
     return 0;
 }
