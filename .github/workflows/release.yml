@@ -14,7 +14,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libraylib-dev
+          sudo apt-get install -y build-essential git cmake libgl1-mesa-dev libx11-dev libxrandr-dev libxi-dev libxcursor-dev libxinerama-dev
+          
+      - name: Build raylib from source
+        run: |
+          git clone --depth 1 https://github.com/raysan5/raylib.git
+          cd raylib/src
+          make PLATFORM=PLATFORM_DESKTOP
+          sudo make install
           
       - name: Build
         run: make
@@ -34,9 +41,8 @@ jobs:
           Section: games
           Priority: optional
           Architecture: amd64
-          Depends: libraylib-dev
           Maintainer: SalvatoreBia
-          Description: A terminal-inspired typing test application
+          Description: A typing test application
            A typing test built with raylib.
           EOF
           
@@ -56,7 +62,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          dnf install -y gcc make raylib-devel rpm-build
+          dnf install -y gcc make raylib-devel rpm-build mesa-libGL-devel libX11-devel
           
       - name: Build
         run: make
@@ -64,21 +70,21 @@ jobs:
       - name: Create RPM package
         run: |
           mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-          mkdir -p ~/rpmbuild/BUILDROOT/typit-1.0-1.x86_64/usr/bin
-          mkdir -p ~/rpmbuild/BUILDROOT/typit-1.0-1.x86_64/usr/share/typit
+          mkdir -p ~/rpmbuild/BUILDROOT/typit-0.1.0-1.x86_64/usr/bin
+          mkdir -p ~/rpmbuild/BUILDROOT/typit-0.1.0-1.x86_64/usr/share/typit
           
-          cp build/typer ~/rpmbuild/BUILDROOT/typit-1.0-1.x86_64/usr/bin/typit
-          cp -r resources ~/rpmbuild/BUILDROOT/typit-1.0-1.x86_64/usr/share/typit/
+          cp build/typer ~/rpmbuild/BUILDROOT/typit-0.1.0-1.x86_64/usr/bin/typit
+          cp -r resources ~/rpmbuild/BUILDROOT/typit-0.1.0-1.x86_64/usr/share/typit/
           
           cat > ~/rpmbuild/SPECS/typit.spec << 'EOF'
           Name: typit
-          Version: 1.0
+          Version: 0.1.0
           Release: 1
-          Summary: A terminal-inspired typing test application
+          Summary: A typing test application
           License: MIT
           
           %description
-          MonkeyType-style typing test built with raylib.
+          A typing test built with raylib.
           
           %files
           /usr/bin/typit
@@ -103,7 +109,7 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm base-devel raylib git
+          pacman -S --noconfirm base-devel raylib git mesa libx11
           
       - name: Build
         run: make
@@ -118,9 +124,9 @@ jobs:
           
           cat > PKGBUILD << 'EOF'
           pkgname=typit
-          pkgver=1.0
+          pkgver=0.1.0
           pkgrel=1
-          pkgdesc="A terminal-inspired typing test application"
+          pkgdesc="A typing test application"
           arch=('x86_64')
           license=('MIT')
           depends=('raylib')

@@ -1,7 +1,7 @@
 pkgname=typit
 pkgver=0.1.0
 pkgrel=1
-pkgdesc="A terminal-inspired typing test application built with raylib"
+pkgdesc="A typing test application built with raylib"
 arch=('x86_64')
 url="https://github.com/SalvatoreBia/typit"
 license=('MIT')

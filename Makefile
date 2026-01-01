@@ -6,6 +6,7 @@ SRC = src/main.c src/file.c src/typing_test.c src/util.c src/gui.c
 TARGET = build/typer
 
 all:
+	mkdir -p build
 	$(CC) $(SRC) -o $(TARGET) $(CFLAGS) $(LDFLAGS)
 
 clean:

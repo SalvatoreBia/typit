@@ -25,7 +25,7 @@ Priority: optional
 Architecture: ${ARCH}
 Depends: libraylib-dev
 Maintainer: SalvatoreBia <salvatore@example.com>
-Description: A terminal-inspired typing test application
+Description: A typing test application
  A typing test built with raylib.
 EOF
 

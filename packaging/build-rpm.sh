@@ -19,11 +19,11 @@ cat > ~/rpmbuild/SPECS/typit.spec << EOF
 Name: typit
 Version: ${VERSION}
 Release: 1
-Summary: A terminal-inspired typing test application
+Summary: A typing test application
 License: MIT
 
 %description
-A terminal-inspired typing test built with raylib.
+A typing test built with raylib.
 
 %files
 /usr/bin/typit

@@ -1,7 +1,7 @@
 Name:           typit
 Version:        0.1.0
 Release:        1%{?dist}
-Summary:        A terminal-inspired typing test application
+Summary:        A typing test application
 
 License:        MIT
 URL:            https://github.com/SalvatoreBia/typit
@@ -11,7 +11,7 @@ BuildRequires:  gcc make raylib-devel
 Requires:       raylib
 
 %description
-A terminal-inspired typing test application built with raylib.
+A typing test application built with raylib.
 Features infinite word scrolling, error tracking, and WPM calculation.
 
 %prep
