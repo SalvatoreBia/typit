@@ -22,18 +22,33 @@ jobs:
       - name: Build
         run: make
         
-      - name: Create release archive
+      - name: Create DEB package
         run: |
-          mkdir -p typit-${{ github.ref_name }}
-          cp build/typer typit-${{ github.ref_name }}/typit
-          cp -r resources typit-${{ github.ref_name }}/
-          tar -czvf typit-${{ github.ref_name }}-linux-amd64.tar.gz typit-${{ github.ref_name }}
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          mkdir -p typit_${VERSION}_amd64/DEBIAN
+          mkdir -p typit_${VERSION}_amd64/usr/bin
+          mkdir -p typit_${VERSION}_amd64/usr/share/typit
+          
+          cp build/typer typit_${VERSION}_amd64/usr/bin/typit
+          cp -r resources typit_${VERSION}_amd64/usr/share/typit/
+          
+          cat > typit_${VERSION}_amd64/DEBIAN/control << EOF
+          Package: typit
+          Version: ${VERSION}
+          Section: games
+          Priority: optional
+          Architecture: amd64
+          Maintainer: SalvatoreBia
+          Description: A typing test application built with raylib
+          EOF
+          
+          dpkg-deb --build typit_${VERSION}_amd64
           
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: typit-linux
-          path: typit-${{ github.ref_name }}-linux-amd64.tar.gz
+          name: typit-deb
+          path: typit_*_amd64.deb
 
   release:
     needs: [build-ubuntu]
@@ -47,5 +62,5 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: typit-linux/*.tar.gz
+          files: typit-deb/*.deb
           generate_release_notes: true
