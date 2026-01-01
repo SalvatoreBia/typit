@@ -1,7 +1,6 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "util.h"
 #include <stddef.h>
 #include <stdbool.h>
 #define TESTS_BASE_PATH "resources/tests"

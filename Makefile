@@ -1,10 +1,8 @@
-# Makefile
 CC = gcc
 CFLAGS = -Wall -std=c99 -I./include
 LDFLAGS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 
-# Dove sono i sorgenti e dove va l'eseguibile
-SRC = src/main.c src/file.c src/typing_test.c
+SRC = src/main.c src/file.c src/typing_test.c src/util.c
 TARGET = build/typer
 
 all:

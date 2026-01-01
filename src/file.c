@@ -1,3 +1,4 @@
+#include "util.h"
 #include <file.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,17 +12,6 @@
 static const char *test_type_table[TEST_TYPE_COUNT] = {
     [TEST_SIMPLE200] = "simple.txt"
 };
-
-void
-ErrorMsg(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    fprintf(stderr, "[ERROR] ");
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-}
 
 static size_t
 GetFileRowsCount(const char *file)
