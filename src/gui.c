@@ -14,6 +14,8 @@ static LanguageList langs;
 static TestTypeList test_types;
 static TestDurationList test_durations;
 static int dropdown_open = -1;
+static bool needs_full_reset = false;
+static bool cursor_is_hand = false;
 
 void
 InitGUI(GUIConfig *cfg)
@@ -110,7 +112,15 @@ SelectDropdownItem(int dropdown_index, size_t item_index)
         }
     }
     else if (dropdown_index == 1) test_types.curr_type = item_index;
-    else if (dropdown_index == 2) test_durations.curr_duration = item_index;
+    else if (dropdown_index == 2)
+    {
+        test_durations.curr_duration = item_index;
+        if (current_session)
+        {
+            ResetTest(current_session);
+            needs_full_reset = true;
+        }
+    }
 }
 
 static void
@@ -128,7 +138,7 @@ DrawDropdownButton(Rectangle rect, const char *text, bool is_hover)
 }
 
 static void
-DrawDropdownMenu(int dropdown_index, float rect_x, float option_width, Vector2 mouse, bool clicked)
+DrawDropdownMenu(int dropdown_index, float rect_x, float option_width, Vector2 mouse, bool clicked, bool *any_hover)
 {
     size_t item_count = GetDropdownItemCount(dropdown_index);
     char item_buffer[32];
@@ -141,6 +151,7 @@ DrawDropdownMenu(int dropdown_index, float rect_x, float option_width, Vector2 m
         };
         
         bool item_hover = CheckCollisionPointRec(mouse, item);
+        if (item_hover) *any_hover = true;
         Color item_color = item_hover ? Fade(DARKGRAY, 1.0f) : Fade(DARKGRAY, 0.9f);
         DrawRectangleRounded(item, 0.2f, 10, item_color);
         
@@ -167,6 +178,7 @@ DrawOptionBar()
     Vector2 mouse = GetMousePosition();
     bool clicked = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
     char text_buffer[32];
+    bool any_hover = false;
     
     for (int i = 0; i < OPTION_BAR_ITEMS; ++i)
     {
@@ -177,6 +189,7 @@ DrawOptionBar()
         };
         
         bool is_hover = CheckCollisionPointRec(mouse, option);
+        if (is_hover) any_hover = true;
         const char *text = GetDropdownButtonText(i, text_buffer, sizeof(text_buffer));
         
         DrawDropdownButton(option, text, is_hover);
@@ -187,8 +200,13 @@ DrawOptionBar()
         }
         if (dropdown_open == i)
         {
-            DrawDropdownMenu(i, rect_x, option_width, mouse, clicked);
+            DrawDropdownMenu(i, rect_x, option_width, mouse, clicked, &any_hover);
         }
+    }
+    
+    if (any_hover)
+    {
+        cursor_is_hand = true;
     }
 }
 
@@ -371,15 +389,39 @@ DrawFooter(void)
 {
     const char *tab_text = "[Tab to reset]";
     const char *esc_text = "[Esc to quit]";
-    const char *repo_text = "[Source code: https://github.com/SalvatoreBia/typit.git]";
+    const char *repo_label = "[Source code: ";
+    const char *repo_url = "https://github.com/SalvatoreBia/typit";
+    const char *repo_end = "]";
     
     int footer_y = gui_config->screen_height - 40;
     int pad = 20;
     
     int tab_width = MeasureText(tab_text, 16);
     int esc_width = MeasureText(esc_text, 16);
+    int label_width = MeasureText(repo_label, 16);
+    int url_width = MeasureText(repo_url, 16);
     
-    DrawText(repo_text, pad, footer_y, 16, gui_config->text_completed_color);
+    DrawText(repo_label, pad, footer_y, 16, gui_config->text_completed_color);
+    
+    Rectangle url_rect = {pad + label_width, footer_y, url_width, 16};
+    Vector2 mouse = GetMousePosition();
+    bool hover = CheckCollisionPointRec(mouse, url_rect);
+    
+    if (hover)
+    {
+        cursor_is_hand = true;
+    }
+    
+    Color url_color = hover ? (Color){100, 150, 255, 255} : (Color){80, 120, 200, 255};
+    DrawText(repo_url, pad + label_width, footer_y, 16, url_color);
+    if (hover) DrawLine(pad + label_width, footer_y + 16, pad + label_width + url_width, footer_y + 16, url_color);
+    
+    if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        OpenURL(repo_url);
+    }
+    
+    DrawText(repo_end, pad + label_width + url_width, footer_y, 16, gui_config->text_completed_color);
     DrawText(esc_text, gui_config->screen_width - pad - tab_width - 10 - esc_width, footer_y, 16, gui_config->text_completed_color);
     DrawText(tab_text, gui_config->screen_width - pad - tab_width, footer_y, 16, gui_config->text_completed_color);
 }
@@ -500,7 +542,7 @@ RunTypingTest(TypingSession *ts, TestVocabulary *voc)
             }
         }
         
-        if (IsKeyPressed(KEY_TAB))
+        if (IsKeyPressed(KEY_TAB) || needs_full_reset)
         {
             ResetTest(ts);
             first_word_idx = 0;
@@ -511,8 +553,11 @@ RunTypingTest(TypingSession *ts, TestVocabulary *voc)
             test_finished = false;
             final_wpm = 0;
             final_accuracy = 0.0f;
+            needs_full_reset = false;
         }
 
+        cursor_is_hand = false;
+        
         BeginDrawing();
         ClearBackground(gui_config->bg_color);
         
@@ -529,6 +574,11 @@ RunTypingTest(TypingSession *ts, TestVocabulary *voc)
         {
             DrawResultScreen(final_wpm, final_accuracy);
         }
+        
+        if (cursor_is_hand)
+            SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+        else
+            SetMouseCursor(MOUSE_CURSOR_DEFAULT);
         
         EndDrawing();
     }
@@ -562,7 +612,7 @@ InitTestDurationList(TestDurationList *list)
     }
 
     list->count = count;
-    list->curr_duration = 2;
+    list->curr_duration = 0;
     return true;
 }
 

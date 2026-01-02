@@ -28,7 +28,7 @@ main(void)
     GUIConfig gui_cfg = {
         .screen_width = 1200,
         .screen_height = 800,
-        .target_fps = 60,
+        .target_fps = 144,
         .font_size = 36,
         .font_size_stats = 24,
         .bg_color = (Color){26, 26, 26, 255},
