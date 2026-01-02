@@ -27,10 +27,14 @@ jobs:
           VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
           
           mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/lib
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
           
           cp build/typer AppDir/usr/bin/typit
           cp -r resources AppDir/usr/bin/
+          
+          cp /usr/lib/x86_64-linux-gnu/libraylib.so.5 AppDir/usr/lib/ || true
+          cp /usr/lib/libraylib.so.5 AppDir/usr/lib/ || true
           
           cat > AppDir/typit.desktop << EOF
           [Desktop Entry]
@@ -49,6 +53,7 @@ jobs:
           #!/bin/bash
           SELF=$(readlink -f "$0")
           HERE=${SELF%/*}
+          export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
           cd "$HERE/usr/bin"
           exec ./typit "$@"
           EOF
